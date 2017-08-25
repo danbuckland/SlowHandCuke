@@ -4,7 +4,7 @@ module Slowhandcuke
     def before_step(step)
       @io.printf "#{step.keyword}#{step.name}".indent(@scenario_indent + 2)
       unless step.multiline_arg.nil?
-        @io.printf "#{step.multiline_arg}".indent(@scenario_indent + 2)
+        @io.printf step.multiline_arg.to_s
       end
       @io.flush
     end
@@ -20,6 +20,20 @@ module Slowhandcuke
       end
       @io.printf "\r\033[K"
       super
+    end
+
+    def table_cell_value(value, status)
+      return if !@table || @hide_this_step
+      status ||= @status || :passed
+      width = @table.col_width(@col_index)
+      cell_text = escape_cell(value.to_s || '   ')
+      padded = cell_text + (' ' * (width - cell_text.unpack('U*').length))
+      prefix = cell_prefix(status)
+      # Print table with extra padding to match the strange table supplied by
+      # step.multiline_arg
+      @io.print(' ' + format_string("#{prefix}    #{padded}", status) +
+                ::Cucumber::Term::ANSIColor.reset(' |'))
+      @io.flush
     end
   end
 end
